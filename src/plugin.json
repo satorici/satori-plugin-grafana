@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
+  "type": "datasource",
+  "name": "Satori Data Source",
+  "id": "satorici-datasource",
+  "metrics": true,
+  "info": {
+    "description": "Satori api data source",
+    "author": {
+      "name": "Satori ci"
+    },
+    "keywords": ["datasource"],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaDependency": ">=9.5.2",
+    "plugins": []
+  }
+}
