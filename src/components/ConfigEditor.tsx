@@ -17,34 +17,22 @@ export function ConfigEditor(props: Props) {
 
   // Secure field (only sent to the backend)
   const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onOptionsChange({
-      ...options,
-      jsonData: {
-        token: event.target.value,
-      },
-    });
+    const jsonData = {
+      ...options.jsonData,
+      token: event.target.value,
+    };
+    onOptionsChange({ ...options, jsonData });
   };
-
 
   const { jsonData } = options;
 
   return (
     <div className="gf-form-group">
       <InlineField label="Server" labelWidth={12}>
-        <Input
-          onChange={onPathChange}
-          value={jsonData.path || ''}
-          placeholder="https://api.satori-ci.com"
-          width={40}
-        />
+        <Input onChange={onPathChange} value={jsonData.path || ''} placeholder="https://api.satori-ci.com" width={40} />
       </InlineField>
       <InlineField label="API Key" labelWidth={12}>
-        <Input
-          value={jsonData.token || ''}
-          placeholder="User token"
-          width={40}
-          onChange={onAPIKeyChange}
-        />
+        <Input value={jsonData.token || ''} placeholder="User token" width={40} onChange={onAPIKeyChange} />
       </InlineField>
     </div>
   );
