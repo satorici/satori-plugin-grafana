@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
-import { InlineField, Input, SecretInput } from '@grafana/ui';
+import { InlineField, Input } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions, MySecureJsonData } from '../types';
+import { MyDataSourceOptions } from '../types';
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
 
@@ -19,46 +19,30 @@ export function ConfigEditor(props: Props) {
   const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
     onOptionsChange({
       ...options,
-      secureJsonData: {
-        apiKey: event.target.value,
+      jsonData: {
+        token: event.target.value,
       },
     });
   };
 
-  const onResetAPIKey = () => {
-    onOptionsChange({
-      ...options,
-      secureJsonFields: {
-        ...options.secureJsonFields,
-        apiKey: false,
-      },
-      secureJsonData: {
-        ...options.secureJsonData,
-        apiKey: '',
-      },
-    });
-  };
 
-  const { jsonData, secureJsonFields } = options;
-  const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
+  const { jsonData } = options;
 
   return (
     <div className="gf-form-group">
-      <InlineField label="Path" labelWidth={12}>
+      <InlineField label="Server" labelWidth={12}>
         <Input
           onChange={onPathChange}
           value={jsonData.path || ''}
-          placeholder="json field returned to frontend"
+          placeholder="https://api.satori-ci.com"
           width={40}
         />
       </InlineField>
       <InlineField label="API Key" labelWidth={12}>
-        <SecretInput
-          isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
-          value={secureJsonData.apiKey || ''}
-          placeholder="secure json field (backend only)"
+        <Input
+          value={jsonData.token || ''}
+          placeholder="User token"
           width={40}
-          onReset={onResetAPIKey}
           onChange={onAPIKeyChange}
         />
       </InlineField>
