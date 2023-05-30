@@ -4,6 +4,7 @@
   "name": "Satori Data Source",
   "id": "satorici-datasource",
   "metrics": true,
+  "logs": false,
   "info": {
     "description": "Satori api data source",
     "author": {

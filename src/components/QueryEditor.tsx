@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { InlineField, Input } from '@grafana/ui';
+import { InlineField, Input, Select, SelectValue } from '@grafana/ui';
 import { QueryEditorProps } from '@grafana/data';
 import { DataSource } from '../datasource';
 import { MyDataSourceOptions, MyQuery } from '../types';
@@ -7,25 +7,29 @@ import { MyDataSourceOptions, MyQuery } from '../types';
 type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
 
 export function QueryEditor({ query, onChange, onRunQuery }: Props) {
-  const onQueryTextChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, queryText: event.target.value });
+  const onIdChange = (event: ChangeEvent<HTMLInputElement>) => {
+    console.log('value:', event.target.value);
+    onChange({ ...query, objId: event.target.value });
+    onRunQuery();
   };
-
-  const onConstantChange = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange({ ...query, constant: parseFloat(event.target.value) });
-    // executes the query
+  const onTypeChange = (value: SelectValue<any>) => {
+    onChange({ ...query, objType: value.value });
     onRunQuery();
   };
 
-  const { queryText, constant } = query;
-
+  const { objType, objId } = query;
+  const options = [
+    { label: 'Monitors', value: 'monitors' },
+    { label: 'Reports', value: 'reports', description: 'list all reports' },
+  ];
+  console.log('obj:', objId);
   return (
     <div className="gf-form">
-      <InlineField label="Constant">
-        <Input onChange={onConstantChange} value={constant} width={8} type="number" step="0.1" />
+      <InlineField label="Type" labelWidth={6}>
+        <Select options={options} onChange={onTypeChange} width={30} value={objType} />
       </InlineField>
-      <InlineField label="Query Text" labelWidth={16} tooltip="Not used yet">
-        <Input onChange={onQueryTextChange} value={queryText || ''} />
+      <InlineField label="Object ID">
+        <Input onChange={onIdChange} value={objId} />
       </InlineField>
     </div>
   );

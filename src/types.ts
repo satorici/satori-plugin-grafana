@@ -1,25 +1,18 @@
 import { DataQuery, DataSourceJsonData } from '@grafana/data';
 
+// Query editor Configuration
 export interface MyQuery extends DataQuery {
-  queryText?: string;
-  constant: number;
+  objType: string;
+  objId: string;
 }
 
 export const DEFAULT_QUERY: Partial<MyQuery> = {
-  constant: 6.5,
+  objType: 'monitors',
+  objId: '',
 };
 
-/**
- * These are options configured for each DataSource instance
- */
+// Data Source Configuration
 export interface MyDataSourceOptions extends DataSourceJsonData {
   path?: string;
   token?: string;
-}
-
-/**
- * Value that is used in the backend, but never sent over HTTP to the frontend
- */
-export interface MySecureJsonData {
-  apiKey?: string;
 }
