@@ -8,7 +8,7 @@ type Props = QueryEditorProps<DataSource, MyQuery, MyDataSourceOptions>;
 
 export function QueryEditor({ query, onChange, onRunQuery }: Props) {
   const onIdChange = (event: ChangeEvent<HTMLInputElement>) => {
-    console.log('value:', event.target.value);
+    console.log('q:', query);
     onChange({ ...query, objId: event.target.value });
     onRunQuery();
   };
@@ -28,9 +28,13 @@ export function QueryEditor({ query, onChange, onRunQuery }: Props) {
       <InlineField label="Type" labelWidth={6}>
         <Select options={options} onChange={onTypeChange} width={30} value={objType} />
       </InlineField>
-      <InlineField label="Object ID">
+      <InlineField disabled={objType === 'reports'} label={objType ? capitalize(objType.slice(0, -1)) + ' ID' : ''}>
         <Input onChange={onIdChange} value={objId} />
       </InlineField>
     </div>
   );
+}
+
+function capitalize(str: string): string {
+  return [...str][0].toUpperCase() + str.slice(1);
 }

@@ -23,5 +23,16 @@
   "dependencies": {
     "grafanaDependency": ">=9.5.2",
     "plugins": []
-  }
+  },
+  "routes": [
+    {
+      "url": "{{ .JsonData.path }}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "content": "Token {{ .SecureJsonData.apiKey }}"
+        }
+      ]
+    }
+  ]
 }

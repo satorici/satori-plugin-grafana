@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
-import { InlineField, Input } from '@grafana/ui';
+import { InlineField, Input, SecretInput } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
-import { MyDataSourceOptions } from '../types';
+import { MyDataSourceOptions, MySecureJsonData } from '../types';
 
 interface Props extends DataSourcePluginOptionsEditorProps<MyDataSourceOptions> {}
 
@@ -15,24 +15,49 @@ export function ConfigEditor(props: Props) {
     onOptionsChange({ ...options, jsonData });
   };
 
-  // Secure field (only sent to the backend)
-  const onAPIKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const jsonData = {
-      ...options.jsonData,
-      token: event.target.value,
-    };
-    onOptionsChange({ ...options, jsonData });
+  const onApiKeyChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onOptionsChange({
+      ...options,
+      secureJsonData: {
+        apiKey: event.target.value,
+      },
+    });
   };
 
-  const { jsonData } = options;
+  const onResetAPIKey = () => {
+    onOptionsChange({
+      ...options,
+      secureJsonFields: {
+        ...options.secureJsonFields,
+        apiKey: false,
+      },
+      secureJsonData: {
+        ...options.secureJsonData,
+        apiKey: '',
+      },
+    });
+  };
 
+  const satori_url = 'https://api.satori-ci.com';
+  const { jsonData, secureJsonFields } = options;
+  const secureJsonData = (options.secureJsonData || {}) as MySecureJsonData;
+  if (!jsonData.path) {
+    jsonData.path = satori_url;
+  }
   return (
     <div className="gf-form-group">
       <InlineField label="Server" labelWidth={12}>
-        <Input onChange={onPathChange} value={jsonData.path || ''} placeholder="https://api.satori-ci.com" width={40} />
+        <Input onChange={onPathChange} value={jsonData.path} placeholder={satori_url} width={40} />
       </InlineField>
-      <InlineField label="API Key" labelWidth={12}>
-        <Input value={jsonData.token || ''} placeholder="User token" width={40} onChange={onAPIKeyChange} />
+      <InlineField label="User Token" labelWidth={12} required>
+        <SecretInput
+          isConfigured={(secureJsonFields && secureJsonFields.apiKey) as boolean}
+          value={secureJsonData.apiKey || ''}
+          placeholder="API key"
+          width={40}
+          onReset={onResetAPIKey}
+          onChange={onApiKeyChange}
+        />
       </InlineField>
     </div>
   );

@@ -12,27 +12,24 @@ import { getBackendSrv } from '@grafana/runtime';
 import { MyQuery, MyDataSourceOptions } from './types';
 
 export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
-  server: string;
-  token: string;
+  proxy_url?: string;
   constructor(instanceSettings: DataSourceInstanceSettings<MyDataSourceOptions>) {
     super(instanceSettings);
-    this.server = instanceSettings.jsonData.path || 'https://api.satori-ci.com';
-    this.token = instanceSettings.jsonData.token || '';
+    console.log('settings:', instanceSettings.jsonData);
+    const satori_url = 'https://api.satori-ci.com';
+    this.proxy_url = instanceSettings.url;
   }
 
   async apiRequest(query: MyQuery) {
     console.log('apiRequest:', query);
-    let headers = new Headers({
-      Authorization: this.token,
-    });
     if (query.objId === undefined || query.objType === 'reports') {
       query.objId = '';
     }
+    const url = `${this.proxy_url}/${query.objType}/${query.objId}`;
+    console.log(url);
     const result = await getBackendSrv().datasourceRequest({
       method: 'GET',
-      url: `${this.server}/${query.objType}/${query.objId}`,
-      params: query,
-      headers: headers,
+      url: url,
     });
     console.log('result:', result);
     let reports = [];

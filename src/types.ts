@@ -14,5 +14,8 @@ export const DEFAULT_QUERY: Partial<MyQuery> = {
 // Data Source Configuration
 export interface MyDataSourceOptions extends DataSourceJsonData {
   path?: string;
-  token?: string;
+}
+
+export interface MySecureJsonData {
+  apiKey?: string;
 }
