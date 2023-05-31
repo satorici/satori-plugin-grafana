@@ -31,7 +31,14 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     if (query.objType === 'monitors') {
       reports = result.data.reports;
     } else {
-      reports = [];
+      reports = result.data.map((c: any) => ({
+        created: c.report.date,
+        fails: c.report.fails,
+        uuid: c.report.uuid,
+        result: c.report.result,
+        status: c.status,
+        comments: c.report.errors,
+      }));
     }
     return reports;
   }
