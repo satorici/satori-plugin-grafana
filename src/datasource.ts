@@ -5,6 +5,7 @@ import {
   DataSourceInstanceSettings,
   MutableDataFrame,
   FieldType,
+  ThresholdsMode,
 } from '@grafana/data';
 
 import { getBackendSrv } from '@grafana/runtime';
@@ -22,11 +23,8 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     if (query.objId === undefined || query.objType === 'reports') {
       query.objId = '';
     }
-    const url = `${this.proxy_url}/${query.objType}/${query.objId}`;
-    const result = await getBackendSrv().datasourceRequest({
-      method: 'GET',
-      url: url,
-    });
+    const url = `${this.proxy_url}/${query.objType}/${query.objId}?limit=50`;
+    const result = await getBackendSrv().datasourceRequest({ method: 'GET', url: url });
     let reports = [];
     if (query.objType === 'monitors') {
       reports = result.data.reports;
@@ -48,13 +46,38 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
       return this.apiRequest(query).then((reports) => {
         const frame = new MutableDataFrame({
           refId: query.refId,
-          meta: {
-            preferredVisualisationType: 'graph',
-          },
+          meta: { preferredVisualisationType: 'graph' },
           fields: [
             { name: 'Time', type: FieldType.time },
-            { name: 'Fails', type: FieldType.number },
-            { name: 'ID', type: FieldType.string },
+            {
+              name: 'Fails',
+              type: FieldType.number,
+              config: {
+                decimals: 0,
+                thresholds: {
+                  mode: ThresholdsMode.Absolute,
+                  steps: [
+                    { color: 'green', value: -Infinity },
+                    { color: 'red', value: 1 },
+                  ],
+                },
+                color: { mode: 'thresholds', seriesBy: 'last' },
+                min: 0,
+              },
+            },
+            {
+              name: 'ID',
+              type: FieldType.string,
+              config: {
+                links: [
+                  {
+                    url: 'https://www.satori-ci.com/report_details/?n=${__value.text}',
+                    title: 'View Report',
+                    targetBlank: true,
+                  },
+                ],
+              },
+            },
             { name: 'Result', type: FieldType.string },
             { name: 'Status', type: FieldType.string },
             { name: 'Errors', type: FieldType.string },
@@ -62,14 +85,15 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
         });
 
         reports.forEach((report: any) => {
-          frame.appendRow([
+          const row = [
             Date.parse(report.created),
             report.fails,
             report.uuid,
             report.result,
             report.status,
             report.comments,
-          ]);
+          ];
+          frame.appendRow(row);
         });
         return frame;
       });
