@@ -36,3 +36,4 @@ e2e-results/
 
 # Custom
 .DS_Store
+.env

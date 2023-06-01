@@ -6,6 +6,8 @@ import {
   MutableDataFrame,
   FieldType,
   ThresholdsMode,
+  MappingType,
+  SpecialValueMatch,
 } from '@grafana/data';
 
 import { getBackendSrv } from '@grafana/runtime';
@@ -23,7 +25,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     if (query.objId === undefined || query.objType === 'reports') {
       query.objId = '';
     }
-    const url = `${this.proxy_url}/${query.objType}/${query.objId}?limit=50`;
+    const url = `${this.proxy_url}/${query.objType}/${query.objId}?limit=40`;
     const result = await getBackendSrv().datasourceRequest({ method: 'GET', url: url });
     let reports = [];
     if (query.objType === 'monitors') {
@@ -36,6 +38,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
         result: c.report.result,
         status: c.status,
         comments: c.report.errors,
+        user: c.report.user,
       }));
     }
     return reports;
@@ -63,6 +66,38 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
                 },
                 color: { mode: 'thresholds', seriesBy: 'last' },
                 min: 0,
+                mappings: [
+                  {
+                    type: MappingType.SpecialValue,
+                    options: {
+                      match: SpecialValueMatch.Null,
+                      result: {
+                        color: 'yellow',
+                        index: 0,
+                      },
+                    },
+                  },
+                  {
+                    type: MappingType.ValueToText,
+                    options: {
+                      '0': {
+                        color: 'green',
+                        index: 1,
+                      },
+                    },
+                  },
+                  {
+                    type: MappingType.RangeToText,
+                    options: {
+                      from: 1,
+                      to: Infinity,
+                      result: {
+                        color: 'red',
+                        index: 2,
+                      },
+                    },
+                  },
+                ],
               },
             },
             {
@@ -78,11 +113,41 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
                 ],
               },
             },
-            { name: 'Result', type: FieldType.string },
+            {
+              name: 'Result',
+              type: FieldType.string,
+              config: {
+                mappings: [
+                  {
+                    type: MappingType.RegexToText,
+                    options: {
+                      pattern: '^Pass.+',
+                      result: {
+                        color: 'green',
+                        index: 0,
+                      },
+                    },
+                  },
+                  {
+                    type: MappingType.RegexToText,
+                    options: {
+                      pattern: '^Fail.+',
+                      result: {
+                        color: 'red',
+                        index: 1,
+                      },
+                    },
+                  },
+                ],
+              },
+            },
             { name: 'Status', type: FieldType.string },
             { name: 'Errors', type: FieldType.string },
           ],
         });
+        if (query.objType === 'reports') {
+          frame.addField({ name: 'User', type: FieldType.string });
+        }
 
         reports.forEach((report: any) => {
           const row = [
@@ -93,6 +158,9 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
             report.status,
             report.comments,
           ];
+          if (query.objType === 'reports') {
+            row.push(report.user);
+          }
           frame.appendRow(row);
         });
         return frame;
