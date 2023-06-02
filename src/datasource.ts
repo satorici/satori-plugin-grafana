@@ -8,11 +8,13 @@ import {
   ThresholdsMode,
   MappingType,
   SpecialValueMatch,
+  TimeRange,
 } from '@grafana/data';
 
 import { getBackendSrv } from '@grafana/runtime';
 
 import { MyQuery, MyDataSourceOptions } from './types';
+import moment from 'moment';
 
 export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   proxy_url?: string;
@@ -21,12 +23,21 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     this.proxy_url = instanceSettings.url;
   }
 
-  async apiRequest(query: MyQuery) {
+  async apiRequest(query: MyQuery, range: TimeRange) {
+    //Convert to mysql compatible dates
+    const format_date = 'YYYY-MM-DD HH:mm:ss';
+    const from = moment(range.from.toISOString()).format(format_date);
+    const to = moment(range.to.toISOString()).format(format_date);
+
     if (query.objId === undefined || query.objType === 'reports') {
       query.objId = '';
     }
-    const url = `${this.proxy_url}/${query.objType}/${query.objId}?limit=40`;
-    const result = await getBackendSrv().datasourceRequest({ method: 'GET', url: url });
+    const url = `${this.proxy_url}/${query.objType}/${query.objId}`;
+    const result = await getBackendSrv().datasourceRequest({
+      method: 'GET',
+      url: url,
+      params: { limit: 100, from: from, to: to },
+    });
     let reports = [];
     if (query.objType === 'monitors') {
       reports = result.data.reports;
@@ -46,7 +57,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
 
   async query(options: DataQueryRequest<MyQuery>): Promise<DataQueryResponse> {
     const promises = options.targets.map((query) => {
-      return this.apiRequest(query).then((reports) => {
+      return this.apiRequest(query, options.range).then((reports) => {
         const frame = new MutableDataFrame({
           refId: query.refId,
           meta: { preferredVisualisationType: 'graph' },
@@ -170,10 +181,21 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   }
 
   async testDatasource() {
-    // TODO: Implement a health check for your data source.
-    return {
-      status: 'success',
-      message: 'Success',
-    };
+    // !Dont catch errors manually
+    return getBackendSrv()
+      .datasourceRequest({
+        method: 'GET',
+        url: `${this.proxy_url}`,
+      })
+      .then((result) => {
+        if (result.ok) {
+          return {
+            status: 'success',
+            message: 'Success',
+          };
+        } else {
+          throw new Error('Failed to access to API');
+        }
+      });
   }
 }
