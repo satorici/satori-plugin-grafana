@@ -23,10 +23,10 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
   }
 
   async apiRequest(query: MyQuery, range: TimeRange) {
-    //Convert to mysql compatible dates
+    //Convert to mysql compatible dates and convert to UTC
     const format_date = 'YYYY-MM-DD HH:mm:ss';
-    const from = range.from.format(format_date);
-    const to = range.to.format(format_date);
+    const from = range.from.utc().format(format_date);
+    const to = range.to.utc().format(format_date);
 
     if (query.objId === undefined || query.objType === 'reports') {
       query.objId = '';
@@ -160,14 +160,8 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
         }
 
         reports.forEach((report: any) => {
-          const row = [
-            Date.parse(report.created),
-            report.fails,
-            report.uuid,
-            report.result,
-            report.status,
-            report.comments,
-          ];
+          const time = Date.parse(report.created + 'z'); // convert date to UTC
+          const row = [time, report.fails, report.uuid, report.result, report.status, report.comments];
           if (query.objType === 'reports') {
             row.push(report.user);
           }
