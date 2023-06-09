@@ -41,7 +41,7 @@ export class DataSource extends DataSourceApi<MyQuery, MyDataSourceOptions> {
     if (query.objType === 'monitors') {
       reports = result.data.reports;
     } else {
-      reports = result.data.map((c: any) => ({
+      reports = result.data.list.map((c: any) => ({
         created: c.report.date,
         fails: c.report.fails,
         uuid: c.report.uuid,
